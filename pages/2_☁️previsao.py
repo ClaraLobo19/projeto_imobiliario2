@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
-import pickle  # ou joblib, se preferir
+#import pickle  # ou joblib, se preferir
 from modules.model import load_and_train_model
-import matplotlib.pyplot as plt
 import pydeck as pdk
 import streamlit as st
-import shap
 import sys
 import os
 # Adiciona a raiz do projeto ao sys.path para permitir importações de outros diretórios

@@ -1,4 +1,3 @@
-from turtle import st
 import pandas as pd
 import os
 from sklearn.preprocessing import StandardScaler
