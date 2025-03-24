@@ -7,14 +7,12 @@ from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
 
 
-#@st.cache_data
-import os
-import pandas as pd
+
 
 
 def chamar_arquivo():
     # Definir seu modelo e pipelines
-    scaler = StandardScaler()
+    #scaler = StandardScaler()
 
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
