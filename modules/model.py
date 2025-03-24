@@ -21,7 +21,7 @@ def chamar_arquivo():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Caminho absoluto para o arquivo CSV (volta uma pasta e acessa 'arquivos/teste.csv')
-    file_path = os.path.join(current_dir, '..', 'arquivos', 'teste.csv')
+    file_path = os.path.join(current_dir, '..', 'arquivos', 'base_consolidada.csv')
 
     # Verifica se o arquivo existe antes de tentar carregar
     if not os.path.exists(file_path):
@@ -72,7 +72,7 @@ def load_and_train_model():
     df = df.drop_duplicates()
     df = df[df['bairro'] != 'Siqueira']
     df = df.dropna(subset=['preço'])
-    df = df[df['condominio'] < 10000]
+    df = df[df['condominio'] < 5000]
 
     df.reset_index(drop=True, inplace=True)
     df = tirar_outliers(df)
