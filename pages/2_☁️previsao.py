@@ -19,19 +19,19 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "m
 
 #-----------------------------------------------CARREGAR MODELOS--------------------------------------------------------------
 # Verifica se o modelo já foi treinado e salvo
-if os.path.exists('modelo_treinado.pkl') and os.path.exists('modelo_kmeans.pkl'):
-    model = joblib.load('modelo_treinado.pkl')
-    kmeans_model = joblib.load('modelo_kmeans.pkl')
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    file_path = os.path.join(current_dir, '..', 'arquivos', 'base_consolidada.csv')
-    df = pd.read_csv(file_path)  # Carregar a base usada no treinamento
-    numericas = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
-else:
-    model, numericas, df, kmeans_model = load_and_train_model()
-    joblib.dump(model, 'modelo_treinado.pkl')
-    joblib.dump(kmeans_model, 'modelo_kmeans.pkl') 
+# if os.path.exists('modelo_treinado.pkl') and os.path.exists('modelo_kmeans.pkl'):
+#     model = joblib.load('modelo_treinado.pkl')
+#     kmeans_model = joblib.load('modelo_kmeans.pkl')
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
+#     file_path = os.path.join(current_dir, '..', 'arquivos', 'base_consolidada.csv')
+#     df = pd.read_csv(file_path)  # Carregar a base usada no treinamento
+#     numericas = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+# else:
+#     model, numericas, df, kmeans_model = load_and_train_model()
+#     joblib.dump(model, 'modelo_treinado.pkl')
+#     joblib.dump(kmeans_model, 'modelo_kmeans.pkl') 
 # Carregar o modelo treinado
-#model, numericas, df, KMeans = load_and_train_model()
+model, numericas, df, kmeans_model = load_and_train_model()
 
 #--------------------------------------------------------------------------------------------------------------------------------
 #st.write(numericas)
@@ -87,16 +87,16 @@ def input_variaveis(numericas):
         elif var == 'banheiros_por_quarto':
             inputs[var] = inputs['banheiros'] / inputs['Quartos']
         elif var == 'cluster_geo':
-            if 'kmeans_model' not in globals():
-                kmeans_model = joblib.load('modelo_kmeans.pkl')
-                scaler = StandardScaler()
-                coords = df_filtrado[['latitude', 'IDH-Renda']]
-                coords_scaled = scaler.fit_transform(coords)  # Ajusta o scaler aos dados do bairro
+        #if 'kmeans_model' not in globals():
+            kmeans_model = joblib.load('modelo_kmeans.pkl')
+            scaler = StandardScaler()
+            #coords = df_filtrado[['latitude', 'IDH-Renda']]
+            #coords_scaled = scaler.fit_transform(coords)  # Ajusta o scaler aos dados do bairro
 
-                # Aplica a transformação nos dados do usuário
-                coords_usuario = scaler.transform([[lat, idh_renda]])
-                # Usa o modelo de cluster já treinado
-                inputs[var] =  kmeans_model.predict(coords_usuario)  # Supondo que você já tenha o modelo treinado
+            # Aplica a transformação nos dados do usuário
+            coords_usuario = scaler.transform([[lat, idh_renda]])
+            # Usa o modelo de cluster já treinado
+            inputs[var] =  kmeans_model.predict(coords_usuario)  # Supondo que você já tenha o modelo treinado
 
         elif var == 'area_renda':
             inputs[var] = inputs['area m²'] * idh_renda  
