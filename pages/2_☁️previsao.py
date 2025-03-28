@@ -158,7 +158,7 @@ def mostrar_estatisticas(df_filtrado):
     if df_filtrado.empty:
         return
     
-    st.write("## 📊 Estatísticas do Bairro")
+    st.write(f"## 📊 Estatísticas do Bairro {df_filtrado['bairro'].unique()[0]}")
     
     col1, col2, col3, col4 = st.columns(4)
     
