@@ -60,7 +60,7 @@ st.sidebar.header("Informações do Imóvel")
 #---------------------------------------- SEPARAR AS VARIÁVEIS DE ENTRADA COM OS COLETADOS DE ENTRADAS DO USUÁRIO---------------------------------------------------------
 def input_variaveis(numericas):
     inputs = {}
-    numericas = [col for col in numericas if col not in ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','IDH-Educação','IDH','preco p/ m²','Regional','Unnamed: 0']]
+    numericas = [col for col in numericas if col not in ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','IDH-Educação','IDH','preco p/ m²','Regional','Unnamed: 0','preço']]
     numericas_extra = ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','Regional', 'IDH-Educação']
 
     lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df)    
