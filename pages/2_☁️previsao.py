@@ -123,9 +123,9 @@ if st.sidebar.button("Fazer Previsão"):
     prediction = model.predict(input_data)
     st.write(f"## O preço estimado do imóvel é: R$ {prediction[0]:,.2f}")
 
-if st.sidebar.button("Simular Investimento"):
-    st.session_state.input_data = input_data
-    st.switch_page('simulador')  
+#if st.sidebar.button("Simular Investimento"):
+#    st.session_state.input_data = input_data
+#    st.switch_page('simulador')  
 
 
 col1, col2 = st.columns(2)
