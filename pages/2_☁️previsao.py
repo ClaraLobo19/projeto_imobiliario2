@@ -3,35 +3,65 @@ import pandas as pd
 #import pickle  # ou joblib, se preferir
 from modules.model import load_and_train_model
 import pydeck as pdk
-import streamlit as st
 import sys
 import os
+from sklearn.cluster import KMeans
+from modules.model import cluster, load_and_train_model, novas_colunas
+from haversine import haversine
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+import joblib
+
 # Adiciona a raiz do projeto ao sys.path para permitir importações de outros diretórios
 # Adiciona a pasta "modules" ao caminho do Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "modules")))
 
 
+#-----------------------------------------------CARREGAR MODELOS--------------------------------------------------------------
+# Verifica se o modelo já foi treinado e salvo
+if os.path.exists('modelo_treinado.pkl') and os.path.exists('modelo_kmeans.pkl'):
+    model = joblib.load('modelo_treinado.pkl')
+    kmeans_model = joblib.load('modelo_kmeans.pkl')
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, '..', 'arquivos', 'base_consolidada.csv')
+    df = pd.read_csv(file_path)  # Carregar a base usada no treinamento
+    numericas = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
+else:
+    model, numericas, df, kmeans_model = load_and_train_model()
+    joblib.dump(model, 'modelo_treinado.pkl')
+    joblib.dump(kmeans_model, 'modelo_kmeans.pkl') 
 # Carregar o modelo treinado
-model, numericas, df = load_and_train_model()
+#model, numericas, df, KMeans = load_and_train_model()
 
+#--------------------------------------------------------------------------------------------------------------------------------
+st.write(numericas)
+
+# ------------------------------------------SELECIONAR BAIRROS E RETORNAR VALORE PARA PREDIÇÃO-----------------------------------
 def selecionar_bairro(df):
     bairro_selecionado = st.sidebar.selectbox("Selecione um bairro:", df["bairro"].sort_values().unique())
     df_filtrado = df[df["bairro"] == bairro_selecionado]
-    lat, lon = df_filtrado["latitude"].mean() , df_filtrado["longitude"].mean()
+    #lat, lon = df_filtrado["latitude"].mean() , df_filtrado["longitude"].mean()
     
-    #st.write(f"Imóveis no bairro **{bairro_selecionado}**:", df_filtrado)
-    idh_longevidade, idh_renda = df_filtrado["IDH-Longevidade"].mean() , df_filtrado["IDH-Renda"].mean()
+    # Aplicando K-Means para encontrar um ponto representativo dentro do bairro
+    kmeans = KMeans(n_clusters=1, random_state=42, n_init=10)
+    kmeans.fit(df_filtrado[["latitude", "longitude"]])
+    lat, lon = kmeans.cluster_centers_[0]  # Centroide do cluster único
+
+    # Cálculo do IDH médio
+    idh_longevidade = df_filtrado["IDH-Longevidade"].mean()
+    idh_renda = df_filtrado["IDH-Renda"].mean()
     
     return lat, lon, idh_longevidade, idh_renda, df_filtrado
+    #-----------------------------------------------------------------------------------------------------------------------------------
 
 
 
 st.sidebar.header("Informações do Imóvel")
-# Coletar entradas numéricas do usuário
+#---------------------------------------- SEPARAR AS VARIÁVEIS DE ENTRADA COM OS COLETADOS DE ENTRADAS DO USUÁRIO---------------------------------------------------------
 def input_variaveis(numericas):
     inputs = {}
-    numericas = [col for col in numericas if col not in ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda']]
-    numericas_extra = ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda']
+    numericas = [col for col in numericas if col not in ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro']]
+    numericas_extra = ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro']
 
     lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df)    
     
@@ -56,6 +86,24 @@ def input_variaveis(numericas):
             inputs[var] = inputs['Quartos'] / inputs['area m²']
         elif var == 'banheiros_por_quarto':
             inputs[var] = inputs['banheiros'] / inputs['Quartos']
+        elif var == 'cluster_geo':
+            if 'kmeans_model' not in globals():
+                kmeans_model = joblib.load('modelo_kmeans.pkl')
+                scaler = StandardScaler()
+                coords = df_filtrado[['latitude', 'IDH-Renda']]
+                coords_scaled = scaler.fit_transform(coords)  # Ajusta o scaler aos dados do bairro
+
+                # Aplica a transformação nos dados do usuário
+                coords_usuario = scaler.transform([[lat, idh_renda]])
+                # Usa o modelo de cluster já treinado
+                inputs[var] =  kmeans_model.predict(coords_usuario)  # Supondo que você já tenha o modelo treinado
+
+        elif var == 'area_renda':
+            inputs[var] = inputs['area m²'] * idh_renda  
+
+        elif var == 'distancia_centro':
+            centro_fortaleza = (-3.730451, -38.521798)
+            inputs[var] = haversine(centro_fortaleza, (lat, lon))
     
     return inputs, df_filtrado, numericas, numericas_extra
 
@@ -67,6 +115,7 @@ st.title("🏡Previsão de Preço de Imóveis")
 st.write(
     '**Este é um simulador de preços de imóveis da cidade de Fortaleza- CE. '
     'Estamos continuamente melhorando este simulador para melhor experiência do usuário**')
+
 #Input usuário
 input_data = pd.DataFrame([inputs])
 if st.sidebar.button("Fazer Previsão"):
@@ -133,7 +182,7 @@ mostrar_estatisticas(df_filtrado)
 
 st.write("## 📍 Mapa dos Imóveis no Bairro")
 exibir_mapa_scater(df_filtrado)
-st.write(numericas)
+
 
 
 

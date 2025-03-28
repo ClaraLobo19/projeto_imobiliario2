@@ -5,42 +5,32 @@ from sklearn.pipeline import make_pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
 from xgboost import XGBRegressor
-
-
-
+from haversine import haversine
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 
 def chamar_arquivo():
-    # Definir seu modelo e pipelines
-    #scaler = StandardScaler()
-
     
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # Caminho absoluto para o arquivo CSV (volta uma pasta e acessa 'arquivos/teste.csv')
+    # Caminho absoluto para o arquivo CSV (volta uma pasta e acessa 'base_consolidada.csv')
     file_path = os.path.join(current_dir, '..', 'arquivos', 'base_consolidada.csv')
 
     # Verifica se o arquivo existe antes de tentar carregar
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"Arquivo NÃO encontrado: {file_path}")
 
-    print(f"Arquivo encontrado: {file_path}")
-
-   
     df = pd.read_csv(file_path)
+    df = novas_colunas(df)
 
     # Removendo colunas desnecessárias
-    colunas_para_remover = ['Unnamed: 0', 'Unnamed: 0.1', 'IDH_x', 'IDH-Renda_x', 
-                             'IDH-Longevidade_x', 'IDH-Educação_x', 'Regional_x', 
-                             'Regional_y', 'numero', 'Regional', 'preco p/ m²', 
-                             'IDH-Educação', 'IDH', 'preço_cond_ratio']
-
-    # Verifica se as colunas existem antes de tentar remover
+    colunas_para_remover = ['endereco','IDH-Educação','IDH', 'preco_bin', 'IDH-Educação','Unnamed: 0']
     df = df.drop(columns=[col for col in colunas_para_remover if col in df.columns], errors='ignore')
 
-    numericas = [col for col in df.columns if df[col].dtype in ['float64', 'int64'] and col not in ['preço', 'preco p/ m²']]
+    #numericas = [col for col in df.columns if df[col].dtype in ['float64', 'int64','int32'] and col not in ['preço', 'preco p/ m²', 'Regional', 'IDH-Renda']]
 
-    return df, numericas
+    return df
 
 
 def tirar_outliers(df):
@@ -54,7 +44,14 @@ def tirar_outliers(df):
     return df
 
 
-def separar_dados(df,numericas):
+def novas_colunas(df):
+    df['area_renda'] = df['area m²'] * df['IDH-Renda'] 
+    centro_fortaleza = (-3.730451, -38.521798)  # Centro de Fortaleza
+    df['distancia_centro'] = df.apply(lambda row: haversine(centro_fortaleza, (row['latitude'], row['longitude'])), axis=1) 
+    return df
+
+
+def separar_dados(df, numericas):
     #numericas = [col for col in df.columns if df[col].dtype in ['float64', 'int64'] and col not in ['preço', 'preco p/ m²']]
     X = df[numericas]
     y = df['preço']
@@ -62,38 +59,58 @@ def separar_dados(df,numericas):
 
     return X_train, X_test, y_train, y_test
 
+
+def cluster(df):
+    df = df.reset_index(drop=True)  
+
+    # Selecionar colunas de localização
+    coords = df[['latitude', 'IDH-Renda']]
+
+    # Normalizar os dados
+    scaler = StandardScaler()
+    coords_scaled = scaler.fit_transform(coords)
+    kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
+    df['cluster_geo'] = kmeans.fit_predict(coords_scaled)
+    return df, kmeans
     
-def load_and_train_model():
-    df,numericas = chamar_arquivo()
-   
+
+def gestao_data(df):
     df = df.drop_duplicates()
     df = df[df['bairro'] != 'Siqueira']
     df = df.dropna(subset=['preço'])
-    df = df[df['condominio'] < 5000]
-
+    df = df[(df['condominio'] > 1) & (df['condominio'] < 5000)]
     df.reset_index(drop=True, inplace=True)
-    df = tirar_outliers(df)
-    X_train, X_test, y_train, y_test = separar_dados(df,numericas)
+    
+    return df
 
+
+def load_and_train_model():
+    df = chamar_arquivo()
+    df = gestao_data(df)
+    df = tirar_outliers(df)
+    df = novas_colunas(df)
+    
+    df = cluster(df)[0]
+    Kmeans = cluster(df)[1]
+    numericas = [col for col in df.columns if df[col].dtype in ['float64', 'int64','int32'] and col not in ['preço', 'preco p/ m²', 'Regional', 'IDH-Renda']]
+    
+    X_train, X_test, y_train, y_test = separar_dados(df,numericas)
     
     best_params = {
-        'colsample_bytree': 1.0, 
-        'learning_rate': 0.1, 
-        'max_depth': 3, 
-        'n_estimators': 500, 
-        'subsample': 0.9
+        'colsample_bytree': 1.0, 'learning_rate': 0.1,
+        'max_depth': 7, 'n_estimators': 400, 'subsample': 0.9
     }
     
-    preprocessor = ColumnTransformer([('num', StandardScaler(), numericas)])
-    
+    preprocessor = ColumnTransformer([
+        ('num', StandardScaler(), numericas)]
+    )
     xgb_pipeline = make_pipeline(
         preprocessor,
         XGBRegressor(**best_params)
     )
-
     xgb_pipeline.fit(X_train, y_train)
     
-    return xgb_pipeline, numericas, df
+    return xgb_pipeline, numericas, df, Kmeans
 
 #if __name__ == '__main__':
 #    model, numericas, df = load_and_train_model()
