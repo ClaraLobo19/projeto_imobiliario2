@@ -23,7 +23,7 @@ def chamar_arquivo():
 
     df = pd.read_csv(file_path)
     df = novas_colunas(df)
-
+    df.drop(columns=['Unnamed: 0', 'IDH', 'IDH-Educação'], inplace=True, errors='ignore')
     # Removendo colunas desnecessárias
     colunas_para_remover = ['endereco','IDH-Educação','IDH', 'preco_bin', 'IDH-Educação','Unnamed: 0']
     df = df.drop(columns=[col for col in colunas_para_remover if col in df.columns], errors='ignore')
