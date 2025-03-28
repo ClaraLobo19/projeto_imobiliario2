@@ -25,7 +25,7 @@ def chamar_arquivo():
     df = novas_colunas(df)
     df.drop(columns=['Unnamed: 0', 'IDH', 'IDH-Educação'], inplace=True, errors='ignore')
     # Removendo colunas desnecessárias
-    colunas_para_remover = ['endereco','IDH-Educação','IDH', 'preco_bin', 'IDH-Educação','Unnamed: 0']
+    colunas_para_remover = ['endereco','IDH', 'preco_bin', 'IDH-Educação','Unnamed: 0']
     df = df.drop(columns=[col for col in colunas_para_remover if col in df.columns], errors='ignore')
 
     #numericas = [col for col in df.columns if df[col].dtype in ['float64', 'int64','int32'] and col not in ['preço', 'preco p/ m²', 'Regional', 'IDH-Renda']]

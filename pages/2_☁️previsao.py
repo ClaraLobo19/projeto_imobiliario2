@@ -32,7 +32,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "m
 #     joblib.dump(kmeans_model, 'modelo_kmeans.pkl') 
 # Carregar o modelo treinado
 model, numericas, df, kmeans_model = load_and_train_model()
-
+#st.write(f'Numericas:{numericas}')
 #--------------------------------------------------------------------------------------------------------------------------------
 #st.write(numericas)
 
@@ -55,20 +55,21 @@ def selecionar_bairro(df):
     #-----------------------------------------------------------------------------------------------------------------------------------
 
 
-
+#st.write(f'Numericas:{numericas}')
 st.sidebar.header("Informações do Imóvel")
 #---------------------------------------- SEPARAR AS VARIÁVEIS DE ENTRADA COM OS COLETADOS DE ENTRADAS DO USUÁRIO---------------------------------------------------------
 def input_variaveis(numericas):
     inputs = {}
-    numericas = [col for col in numericas if col not in ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','IDH-Educação','IDH','preco p/ m²','Regional','Unnamed: 0','preço']]
-    numericas_extra = ['quartos_por_m²', 'banheiros_por_quarto', 'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','Regional', 'IDH-Educação']
+    numericas = [col for col in numericas if col not in [ 'latitude', 'longitude', 'IDH-Longevidade', 'area_renda', 'distancia_centro', 'cluster_geo','Unnamed: 0']]
+    numericas_extra = ['latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro']
+    #,'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','IDH-Educação','IDH','preco p/ m²','Regional','preço'
 
-    lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df)    
-    
+    lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df)
+     
     for feature in numericas:
         if (feature == 'condominio') or (feature == 'area m²'):
             # Valor mínimo do condomínio é 0
-            inputs[feature] = st.sidebar.number_input(f"Valor de {feature}", min_value=0.1, value=0.1, step=10.0)
+            inputs[feature] = st.sidebar.number_input(f"Valor de {feature}", min_value=0.0, value=0.1, step=10.0)
         else:
             # Para outras variáveis, o valor mínimo é 0.1
             inputs[feature] = st.sidebar.number_input(f"Quantidade de {feature}", min_value=0.1, value=0.1, step=10.0)
@@ -82,22 +83,20 @@ def input_variaveis(numericas):
             inputs[var] = idh_longevidade
         elif var == 'IDH-Renda':
             inputs[var] = idh_renda
-        elif var == 'quartos_por_m²':
-            inputs[var] = inputs['Quartos'] / inputs['area m²']
-        elif var == 'banheiros_por_quarto':
-            inputs[var] = inputs['banheiros'] / inputs['Quartos']
+        #elif var == 'quartos_por_m²':
+            #inputs[var] = inputs['Quartos'] / inputs['area m²']
+        #elif var == 'banheiros_por_quarto':
+            #inputs[var] = inputs['banheiros'] / inputs['Quartos']
         elif var == 'cluster_geo':
         #if 'kmeans_model' not in globals():
-            kmeans_model = joblib.load('modelo_kmeans.pkl')
+            #kmeans_model = joblib.load('modelo_kmeans.pkl')
             scaler = StandardScaler()
-            #coords = df_filtrado[['latitude', 'IDH-Renda']]
-            #coords_scaled = scaler.fit_transform(coords)  # Ajusta o scaler aos dados do bairro
+            coords = df_filtrado[['latitude', 'IDH-Renda']]
+            coords_scaled = scaler.fit_transform(coords)  # Ajusta o scaler aos dados do bairro
 
             # Aplica a transformação nos dados do usuário
             coords_usuario = scaler.transform([[lat, idh_renda]])
-            # Usa o modelo de cluster já treinado
-            inputs[var] =  kmeans_model.predict(coords_usuario)  # Supondo que você já tenha o modelo treinado
-
+            inputs[var] =  kmeans_model.predict(coords_usuario)  
         elif var == 'area_renda':
             inputs[var] = inputs['area m²'] * idh_renda  
 
@@ -118,6 +117,8 @@ st.write(
 
 #Input usuário
 input_data = pd.DataFrame([inputs])
+#st.write(input_data)
+#st.write(input_data.info())
 if st.sidebar.button("Fazer Previsão"):
     prediction = model.predict(input_data)
     st.write(f"## O preço estimado do imóvel é: R$ {prediction[0]:,.2f}")
@@ -174,9 +175,10 @@ def mostrar_estatisticas(df_filtrado):
         qntd_amostra = df_filtrado.shape[0]
         st.metric("Média de preço por m²", f"R$ {df_filtrado['preço p/m'].mean():.2f} ")
         st.metric("Número de Casas disponíveis ", f"{qntd_amostra}")
-    #with col4:
-    #    st.metric("IDH do bairro", f"{df_filtrado['IDH']:.2f}")
-    #    st.metric("Regional", f"{df_filtrado['Regional']:.2f}")    
+    with col4:
+        #st.write(df_filtrado.columns)
+        st.metric("IDH-Renda", f"{df_filtrado['IDH-Renda'].mean():.2f}")
+        st.metric("IDH-Longevidade", f"{df_filtrado['IDH-Longevidade'].mean():.2f}")    
 
 mostrar_estatisticas(df_filtrado)
 

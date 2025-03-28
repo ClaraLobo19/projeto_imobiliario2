@@ -12,7 +12,7 @@ st.title("🏡 Bem-vindo ao Simulador de Imóveis")
 st.write("#### Escolha uma opção abaixo para explorar os dados:")
 
 # Carregar o modelo treinado
-model, numericas, df = load_and_train_model()
+model, numericas, df,kmeans = load_and_train_model()
 def exibir_scater(df):
 
     bins = [0, 100000, 250000, 500000, 1000000, float('inf')]
