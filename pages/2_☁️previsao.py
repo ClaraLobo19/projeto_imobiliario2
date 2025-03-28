@@ -34,7 +34,7 @@ else:
 #model, numericas, df, KMeans = load_and_train_model()
 
 #--------------------------------------------------------------------------------------------------------------------------------
-st.write(numericas)
+#st.write(numericas)
 
 # ------------------------------------------SELECIONAR BAIRROS E RETORNAR VALORE PARA PREDIÇÃO-----------------------------------
 def selecionar_bairro(df):
