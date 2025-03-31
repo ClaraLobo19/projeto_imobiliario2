@@ -12,6 +12,7 @@ from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 import joblib
 
+st.set_page_config(layout="wide")
 # Adiciona a raiz do projeto ao sys.path para permitir importações de outros diretórios
 # Adiciona a pasta "modules" ao caminho do Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "modules")))
@@ -43,9 +44,9 @@ def selecionar_bairro(df):
     #lat, lon = df_filtrado["latitude"].mean() , df_filtrado["longitude"].mean()
     
     # Aplicando K-Means para encontrar um ponto representativo dentro do bairro
-    kmeans = KMeans(n_clusters=1, random_state=42, n_init=10)
-    kmeans.fit(df_filtrado[["latitude", "longitude"]])
-    lat, lon = kmeans.cluster_centers_[0]  # Centroide do cluster único
+    kmeans_bairro= KMeans(n_clusters=1, random_state=42, n_init=10)
+    kmeans_bairro.fit(df_filtrado[["latitude", "longitude"]])
+    lat, lon = kmeans_bairro.cluster_centers_[0]  # Centroide do cluster único
 
     # Cálculo do IDH médio
     idh_longevidade = df_filtrado["IDH-Longevidade"].mean()
@@ -65,14 +66,24 @@ def input_variaveis(numericas):
     #,'latitude', 'longitude', 'IDH-Longevidade', 'IDH-Renda','cluster_geo', 'area_renda','distancia_centro','IDH-Educação','IDH','preco p/ m²','Regional','preço'
 
     lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df)
-     
+    #global lat, lon    
     for feature in numericas:
-        if (feature == 'condominio') or (feature == 'area m²'):
+        if (feature == 'condominio') :
             # Valor mínimo do condomínio é 0
-            inputs[feature] = st.sidebar.number_input(f"Valor de {feature}", min_value=0.0, value=0.1, step=10.0)
-        else:
-            # Para outras variáveis, o valor mínimo é 0.1
-            inputs[feature] = st.sidebar.number_input(f"Quantidade de {feature}", min_value=0.1, value=0.1, step=10.0)
+            inputs[feature] = st.sidebar.number_input(f"Valor do condomínio", min_value = 0.0, step = 50.0)
+        
+        elif (feature == 'area m²'):
+            inputs[feature] = st.sidebar.number_input(f"Tamanho da  {feature}", min_value = 0, step = 20)
+        
+        elif (feature == 'Quartos') or (feature == 'banheiros'):
+            # Valor mínimo do condomínio é 0
+            inputs[feature] = st.sidebar.number_input(f"Quantidade de {feature}", min_value = 0, step = 1)
+        elif (feature == 'vagas'):
+            inputs[feature] = st.sidebar.number_input(f"Número de {feature} na garagem ", min_value = 0, step = 1)
+        #else:
+        #    # Para outras variáveis, o valor mínimo é 0.1
+        #    st.write(f"Valor de {feature} ")
+        #    inputs[feature] = st.sidebar.number_input(f"Quantidade de {feature}", min_value = 0.0,  step = 10.0)
 
     for var in numericas_extra:
         if var == 'latitude':
@@ -145,8 +156,8 @@ def exibir_mapa_scater(df_filtrado):
     )
 
     view_state = pdk.ViewState(
-        latitude=df_filtrado["latitude"].mean(),
-        longitude=df_filtrado["longitude"].mean(),
+        latitude=df['latitude'].mean(),
+        longitude=df['longitude'].mean(),
         zoom=13,  # Nível de zoom inicial
         pitch=15,
     )
@@ -163,8 +174,8 @@ def mostrar_estatisticas(df_filtrado):
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
-        st.metric("🏠 Preço Médio", f"R$ {df_filtrado['preço'].mean():,.2f}")
-        st.metric("🏠 Preço Mediana", f"R$ {df_filtrado['preço'].median():,.2f}")
+        #st.metric("🏠 Preço Médio", f"R$ {df_filtrado['preço'].mean():,.2f}")
+        st.metric("🏠 Faixa Mediana de Preço", f"R$ {df_filtrado['preço'].median():,.2f}")
         st.metric("📏 Área Média", f"{df_filtrado['area m²'].mean():,.2f} m²")
     
     with col2:
@@ -182,7 +193,9 @@ def mostrar_estatisticas(df_filtrado):
 
 mostrar_estatisticas(df_filtrado)
 
-st.write("## 📍 Mapa dos Imóveis no Bairro")
+st.write("## 📍 Mapa de alguns Imóveis no Bairro")
+
+#lat, lon, idh_longevidade, idh_renda, df_filtrado = selecionar_bairro(df_filtrado)
 exibir_mapa_scater(df_filtrado)
 
 
