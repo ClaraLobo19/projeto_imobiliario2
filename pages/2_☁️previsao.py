@@ -17,6 +17,11 @@ st.set_page_config(layout="wide")
 # Adiciona a pasta "modules" ao caminho do Python
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "modules")))
 
+st.title("🏡Previsão de Preço de Imóveis")
+st.write(
+    '**Este é um simulador de preços de imóveis da cidade de Fortaleza- CE. '
+    'Estamos continuamente melhorando este simulador para melhor experiência do usuário**')
+
 
 #-----------------------------------------------CARREGAR MODELOS--------------------------------------------------------------
 # Verifica se o modelo já foi treinado e salvo
@@ -39,7 +44,7 @@ model, numericas, df, kmeans_model = load_and_train_model()
 
 # ------------------------------------------SELECIONAR BAIRROS E RETORNAR VALORE PARA PREDIÇÃO-----------------------------------
 def selecionar_bairro(df):
-    bairro_selecionado = st.sidebar.selectbox("Selecione um bairro:", df["bairro"].sort_values().unique())
+    bairro_selecionado = st.selectbox("Selecione um bairro:", df["bairro"].sort_values().unique())
     df_filtrado = df[df["bairro"] == bairro_selecionado]
     #lat, lon = df_filtrado["latitude"].mean() , df_filtrado["longitude"].mean()
     
@@ -121,10 +126,10 @@ inputs, df_filtrado, numericas, numericas_extra = input_variaveis(numericas)
 
 
 
-st.title("🏡Previsão de Preço de Imóveis")
-st.write(
-    '**Este é um simulador de preços de imóveis da cidade de Fortaleza- CE. '
-    'Estamos continuamente melhorando este simulador para melhor experiência do usuário**')
+# st.title("🏡Previsão de Preço de Imóveis")
+# st.write(
+#     '**Este é um simulador de preços de imóveis da cidade de Fortaleza- CE. '
+#     'Estamos continuamente melhorando este simulador para melhor experiência do usuário**')
 
 #Input usuário
 input_data = pd.DataFrame([inputs])
