@@ -56,11 +56,12 @@ saldo_devedor = valor_financiado
 tabela_amortizacao = []
 for mes in range(1, n_meses + 1):
     juros = saldo_devedor * taxa_mensal
+    valor = parcela * juros
     amortizacao = parcela - juros
     saldo_devedor -= amortizacao
-    tabela_amortizacao.append([mes, parcela, juros, amortizacao, saldo_devedor])
+    tabela_amortizacao.append([mes, parcela,juros, valor, amortizacao, saldo_devedor])
 
-df_amortizacao = pd.DataFrame(tabela_amortizacao, columns=["Mês", "Parcela", "Juros", "Amortização", "Saldo Devedor"])
+df_amortizacao = pd.DataFrame(tabela_amortizacao, columns=["Mês", "Parcela", "Juros","valor", "Amortização", "Saldo Devedor"])
 
 #--- Exibir Tabela e Gráfico ---
 st.write("### 📉 Evolução do Financiamento")

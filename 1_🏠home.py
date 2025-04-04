@@ -3,22 +3,34 @@ import pandas as pd
 import os
 from modules.model import load_and_train_model
 import pydeck as pdk
+from modules.model import data_frame
 
-# Configuração da página
 st.set_page_config(page_title="Simulador de Imóveis", layout="wide")
+
+
 #sst.sidebar.title("Menu")
 # Título principal
 st.title("🏡 Bem-vindo ao Simulador de Imóveis")
 st.write("#### Escolha uma opção abaixo para explorar os dados:")
 
+
 # Carregar o modelo treinado
-model, numericas, df,kmeans = load_and_train_model()
+model, kmeans = load_and_train_model()
+
+df = data_frame()
+#st.write(df)
+numericas = [
+    "aream2", "Quartos", "banheiros", "vagas", "condominio", 
+    "latitude", "longitude", "idh_longevidade", "area_renda", 
+    "distancia_centro", "cluster_geo"
+]
+
 def exibir_scater(df):
 
     bins = [0, 100000, 250000, 500000, 1000000, float('inf')]
     labels = ['0-100k', '100k-250k', '250k-500k', '500k-1M', 'Acima de 1M']
 
-    df['preco_bin'] = pd.cut(df['preço'], bins=bins, labels=labels)
+    df['preco_bin'] = pd.cut(df['preco'], bins=bins, labels=labels)
 
     # Mapear os labels de bins para valores numéricos para usar no mapa
     bin_values = {
@@ -57,46 +69,3 @@ def exibir_scater(df):
 st.write("## 📍 Mapa de calor por preço Fortaleza")
 st.write('Este mapa representa a distribuição de preços dos imóveis em Fortaleza. As áreas em vermelho são as areas com imóveis mais caros. As áreas amarelas são as áreas com imóveis mais baratos.')
 exibir_scater(df)
-
-# class MultiApp:
-#     def __init__(self):
-#         self.apps = {}
-
-#     def add_app(self, title, func):
-#         """Adiciona uma nova página ao app"""
-#         self.apps[title] = func
-
-#     def run(self):
-#         """Executa a página selecionada no menu lateral"""
-#         with st.sidebar:
-#             selected = option_menu(
-#                 menu_title="Menu",  # Nome do menu na barra lateral
-#                 options=list(self.apps.keys()),  # Opções disponíveis
-#                 icons=['cloud', 'calculator'],  # Ícones para cada página
-#                 menu_icon="cast",
-#                 default_index=0,
-#                 styles={
-#                     "container": {"padding": "5px"},
-#                     "nav-link": {"color": "black", "font-weight": "bold"},
-#                     "nav-link-selected": {"color": "white", "background-color": "green"},
-#                 }
-#             )
-
-#         # Chama a função correspondente apenas uma vez
-#         if selected in self.apps:
-#             self.apps[selected]()
-
-# # Funções das páginas
-# def previsao():
-#     st.write("### Página de Previsão de Preços")
-#     st.write("Aqui você poderá prever os preços dos imóveis.")
-
-# def simulador():
-#     st.write("### Página do Simulador de Investimentos")
-#     st.write("Aqui você pode simular investimentos em imóveis.")
-
-# # Criando a aplicação
-# app = MultiApp()
-# app.add_app("Previsão", previsao)
-# app.add_app("Simulador", simulador)
-# app.run()
